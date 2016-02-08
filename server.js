@@ -4,10 +4,14 @@
 'use strict';
 
 const Person = require('./person');
-const repository = require('./repository');
 const express = require('express');
 const HttpStatus = require('http-status-codes');
 
+let repository;
+const StoreType = {
+    MEMORY: 'MEMORY',
+    DATABASE: 'DATABASE'
+};
 const port = 8081;
 const app = express();
 
@@ -63,8 +67,21 @@ module.exports = {
      * Run the server
      * @param {Function(Number)?}   cb  Node-style callback
      */
-    start: (cb) => {
+    start: (cb, storeType) => {
+        storeType = storeType || StoreType.DATABASE;
+        switch (storeType) {
+            case StoreType.DATABASE:
+                repository = require('./repository');
+                break;
+            case StoreType.MEMORY:
+                repository = require('./memRepository');
+                break;
+            default:
+                throw new Error('storeType is not a valid constant');
+        }
+        
         app.listen(port);
         cb(port);
-    }
+    },
+    StoreType
 }

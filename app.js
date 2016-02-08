@@ -39,10 +39,14 @@ program.command('remove [id]')
 
 program.command('serve')
     .description('Expose an HTTP API')
-    .action(() => {
+    .option('--memory', 'Use in-memory storage')
+    .action((options) => {
+        const storeType = options.memory
+            ? server.StoreType.MEMORY
+            : server.StoreType.DATABASE;
         server.start((port) => { 
             console.log(`port: ${port}`);
-        });
+        }, storeType);
     });
 
 program.command('', {isDefault: true})

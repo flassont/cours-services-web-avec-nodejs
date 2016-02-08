@@ -4,36 +4,45 @@ process.on('uncaughtException', console.error);
 
 const Person = require('./person');
 const server = require('./server');
-const fs = require('fs');
 const program = require('commander');
-const shortid = require('shortid');
-
-const repository = require('./repository');
-
-program.version('TP4');
+const request = require('request')
+    .defaults({
+        baseUrl: `http://localhost:${process.env.npm_package_config_port}`
+    });
+    
+program.version('TP5');
 
 program.command('list')
     .description('List contacts')
     .action(() => {
-        repository.read((err, data) => {
-            if (err) throw err;
-            data.forEach(contact => console.log(`${contact.lastName.toUpperCase()} ${contact.firstName}`));
+        request(`/contacts/`, (err, res, body) => {
+             if (err) throw err;
+             JSON.parse(body)
+                .forEach(c => { 
+                    console.log(`${c.lastName.toUpperCase()} ${c.firstName}`); 
+                });
         });
     });
     
 program.command('add [firstName] [lastName]')
     .description('Add a new person with this identity')
     .action((firstName, lastName) => {
-        repository.append(new Person(firstName, lastName));
+        request({
+            url: `/contacts/`,
+            method: 'POST',
+            json: {
+                firstName,
+                lastName
+            }
+        });
     });
 
 program.command('remove [id]')
     .description('Remove the contact having this id')
     .action((id) => {
-        repository.read((err, data) => {
-            if (err) throw err;
-            data = data.filter(contact => contact.id !== id);
-            repository.write(data, (err) => { if (err) throw err; });
+        request({
+            url: `/contacts/${id}`,
+            method: 'DELETE'
         });
     });
 

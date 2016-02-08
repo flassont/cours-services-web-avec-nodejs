@@ -12,7 +12,7 @@ const StoreType = {
     MEMORY: 'MEMORY',
     DATABASE: 'DATABASE'
 };
-const port = 8081;
+const port = process.env.npm_package_config_port;
 const app = express();
 
 // Middlewares

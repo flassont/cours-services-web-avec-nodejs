@@ -1,15 +1,16 @@
 "use strict";
 
 process.on('uncaughtException', console.error);
-const contactFile = process.env.npm_package_config_contacts;
 
+const Person = require('./person');
+const server = require('./server');
 const fs = require('fs');
 const program = require('commander');
 const shortid = require('shortid');
 
 const repository = require('./repository');
 
-program.version('TP3');
+program.version('TP4');
 
 program.command('list')
     .description('List contacts')
@@ -23,16 +24,7 @@ program.command('list')
 program.command('add [firstName] [lastName]')
     .description('Add a new person with this identity')
     .action((firstName, lastName) => {
-        let person = {
-            id: shortid.generate(),
-            firstName: firstName,
-            lastName: lastName
-        };
-        repository.read((err, data) => {
-            if (err) throw err;
-            data.push(person);
-            repository.write(data, (err) => { if(err) throw err; });
-        });
+        repository.append(new Person(firstName, lastName));
     });
 
 program.command('remove [id]')
@@ -42,6 +34,14 @@ program.command('remove [id]')
             if (err) throw err;
             data = data.filter(contact => contact.id !== id);
             repository.write(data, (err) => { if (err) throw err; });
+        });
+    });
+
+program.command('serve')
+    .description('Expose an HTTP API')
+    .action(() => {
+        server.start((port) => { 
+            console.log(`port: ${port}`);
         });
     });
 

@@ -5,19 +5,46 @@ const contactFile = process.env.npm_package_config_contacts;
 
 const fs = require('fs');
 const program = require('commander');
+const shortid = require('shortid');
 
-program.version('TP2');
+const repository = require('./repository');
+
+program.version('TP3');
 
 program.command('list')
     .description('List contacts')
     .action(() => {
-       fs.readFile(contactFile, (err, data) => {
-           if (err) throw err;
-           JSON.parse(data)
-            .forEach(contact => console.log(`${contact.lastName.toUpperCase()} ${contact.firstName}`));
-       });
+        repository.read((err, data) => {
+            if (err) throw err;
+            data.forEach(contact => console.log(`${contact.lastName.toUpperCase()} ${contact.firstName}`));
+        });
     });
     
+program.command('add [firstName] [lastName]')
+    .description('Add a new person with this identity')
+    .action((firstName, lastName) => {
+        let person = {
+            id: shortid.generate(),
+            firstName: firstName,
+            lastName: lastName
+        };
+        repository.read((err, data) => {
+            if (err) throw err;
+            data.push(person);
+            repository.write(data, (err) => { if(err) throw err; });
+        });
+    });
+
+program.command('remove [id]')
+    .description('Remove the contact having this id')
+    .action((id) => {
+        repository.read((err, data) => {
+            if (err) throw err;
+            data = data.filter(contact => contact.id !== id);
+            repository.write(data, (err) => { if (err) throw err; });
+        });
+    });
+
 program.command('', {isDefault: true})
     .action(() => {
         program.help();
